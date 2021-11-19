@@ -1,0 +1,51 @@
+{
+  "web": {
+    "meta": {
+      "title": "web"
+    },
+    "git": ["https://github.com/shapeshift/web.git"],
+    "github": ["https://github.com/shapeshift/web"]
+  },
+  "unchained": {
+    "meta": {
+      "title": "unchained"
+    },
+    "git": ["https://github.com/shapeshift/unchained.git"],
+    "github": ["https://github.com/shapeshift/unchained"]
+  },
+  "lib": {
+    "meta": {
+      "title": "lib"
+    },
+    "git": ["https://github.com/shapeshift/lib.git"],
+    "github": ["https://github.com/shapeshift/lib"]
+  },
+  "hdwallet": {
+    "meta": {
+      "title": "hdwallet"
+    },
+    "git": ["https://github.com/shapeshift/hdwallet.git"],
+    "github": ["https://github.com/shapeshift/hdwallet"]
+  },
+  "yearn-router": {
+    "meta": {
+      "title": "yearn-router"
+    },
+    "git": ["https://github.com/shapeshift/yearn-router.git"],
+    "github": ["https://github.com/shapeshift/yearn-router"]
+  },
+  "foxfarm": {
+    "meta": {
+      "title": "foxfarm"
+    },
+    "git": ["https://github.com/shapeshift/foxfarm.git"],
+    "github": ["https://github.com/shapeshift/foxfarm"]
+  },
+  "fox-token": {
+    "meta": {
+      "title": "fox-token"
+    },
+    "git": ["https://github.com/shapeshift/fox-token.git"],
+    "github": ["https://github.com/shapeshift/fox-token"]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "blacklist": [],
+  "organizations": {
+    "ShapeShift": [
+      {
+        "domain": "shapeshift.com",
+        "is_top": true
+      }
+    ]
+  },
+  "time": "2019-09-09 07:00:00",
+  "uidentities": {}
+}

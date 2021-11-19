@@ -1,0 +1,31 @@
+{
+    "name": "grimoirelab",
+    "devDependencies": {
+        "@types/node": "^14"
+    },
+    "dependencies": {
+        "@foxcookieco/infrastructure": "^0.1.111-0",
+        "@pulumi/pulumi": "^3.18.0",
+        "@pulumi/aws": "^4.28.0",
+        "@pulumi/awsx": "^0.32.0",
+        "typescript": "^4.0.5"
+    },
+    "scripts": {
+        "ecr_login": "aws ecr get-login --no-include-email --region eu-west-1 | sh",
+        "pulumi:build:update": "pulumi stack select 'CroixDrinkers/build' && pulumi up --skip-preview --yes",
+        "pulumi:prod:preview": "pulumi stack select 'CroixDrinkers/prod' && PULUMI_K8S_SUPPRESS_DEPRECATION_WARNINGS=true pulumi preview --refresh",
+        "pulumi:prod:refresh": "pulumi stack select 'CroixDrinkers/prod' && pulumi refresh --yes",
+        "pulumi:prod:update": "pulumi stack select 'CroixDrinkers/prod' && PULUMI_K8S_SUPPRESS_DEPRECATION_WARNINGS=true pulumi update --skip-preview --yes",
+        "pulumi:stage:preview": "pulumi stack select 'CroixDrinkers/stage' && PULUMI_K8S_SUPPRESS_DEPRECATION_WARNINGS=true pulumi preview --refresh",
+        "pulumi:stage:refresh": "pulumi stack select 'CroixDrinkers/stage' && pulumi refresh --yes",
+        "pulumi:stage:update": "pulumi stack select 'CroixDrinkers/stage' && PULUMI_K8S_SUPPRESS_DEPRECATION_WARNINGS=true pulumi update --skip-preview --yes"
+    },
+    "prettier": {
+        "tabWidth": 4,
+        "semi": false,
+        "singleQuote": true,
+        "printWidth": 100,
+        "trailingComma": "none",
+        "arrowParens": "avoid"
+    }
+}
