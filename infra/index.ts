@@ -185,7 +185,7 @@ async function deploy(name: string, env: string) {
         }
     }
 
-    const publicListenerRule: kube.types.input.networking.v1beta1.IngressRule = {
+    const shapeshiftListenerRule: kube.types.input.networking.v1beta1.IngressRule = {
         host: 'analytics.shapeshift.com',
         http: {
             paths: [
@@ -199,7 +199,21 @@ async function deploy(name: string, env: string) {
         }
     }
 
-    const rules = [publicListenerRule, choeListenerRule]
+    const foxfoundationListenerRule: kube.types.input.networking.v1beta1.IngressRule = {
+        host: 'analytics.foxfoundation.io',
+        http: {
+            paths: [
+                {
+                    backend: {
+                        serviceName: service.metadata.name,
+                        servicePort: deployment.spec.template.spec.containers[0].ports[0].containerPort
+                    }
+                }
+            ]
+        }
+    }
+
+    const rules = [foxfoundationListenerRule, shapeshiftListenerRule, choeListenerRule]
 
     const ingress = new kube.networking.v1beta1.Ingress(
         name,
