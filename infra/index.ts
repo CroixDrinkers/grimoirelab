@@ -11,7 +11,7 @@ async function main() {
 
     if (environment === 'build') {
         const imageName = await buildImage(service_name)
-        return imageName        
+        return imageName
     }
 
     return deploy(service_name, environment)
@@ -39,27 +39,28 @@ async function deploy(name: string, env: string) {
 
     const provider = new kube.Provider('megacluster-prod', { context: 'megacluster-prod' })
     const namespace = 'axiom'
-    const repo = `978526999579.dkr.ecr.eu-west-1.amazonaws.com/${name}`
-    const ecrEndpoint = `${repo}:latest`
+    const repo = `978526999579.dkr.ecr.eu-west-1.amazonaws.com/grimoirelab`
+    const ecrEndpoint = `${repo}:ac09f27`
 
-    let secretEnvs: kube.types.input.core.v1.EnvVar[] = []
+    const config = new pulumi.Config()
+    const githubToken = config.requireSecret('github-token')
 
-    const secretEnv = (key: string): kube.types.input.core.v1.EnvVar => {
-        return {
-            name: key,
-            valueFrom: {
-                secretKeyRef: {
-                    name: `shapeshift-${env}`,
-                    key: key
-                }
+    const grimoirelabSecrets = await new kube.core.v1.Secret(
+        'grimoirelab-secrets',
+        {
+            metadata: {
+                name: 'grimoirelab-secrets',
+                namespace: namespace
+            },
+            stringData: {
+                GRIMOIRELAB_GITHUB_TOKEN: githubToken
             }
+        },
+        {
+            provider: provider,
+            parent: provider
         }
-    }
-
-    secretEnvs = [
-        'GRIMOIRELAB_GITHUB_TOKEN'
-    ].map(secretEnv)
-
+    )
 
     const deployment = new kube.apps.v1.Deployment(
         'grimoirelab',
@@ -130,7 +131,15 @@ async function deploy(name: string, env: string) {
                                     { containerPort: 5601 }
                                 ],
                                 env: [
-                                    ...secretEnvs
+                                    {
+                                        name: 'GRIMOIRELAB_GITHUB_TOKEN',
+                                        valueFrom: {
+                                            secretKeyRef: {
+                                                name: grimoirelabSecrets.metadata.name,
+                                                key: 'GRIMOIRELAB_GITHUB_TOKEN'
+                                            }
+                                        }
+                                    },
                                 ],
                                 resources: {
                                     limits: {
@@ -175,7 +184,7 @@ async function deploy(name: string, env: string) {
     )
 
     const choeListenerRule: kube.types.input.networking.v1beta1.IngressRule = {
-        host: pulumi.interpolate`${name}.chiefhappinessofficerellie.org`,
+        host: pulumi.interpolate`${name}.megacluster.${env}.chiefhappinessofficerellie.org`,
         http: {
             paths: [
                 {
