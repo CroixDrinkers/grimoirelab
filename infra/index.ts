@@ -1,6 +1,6 @@
-import * as infra from '@foxcookieco/infrastructure'
 import * as pulumi from '@pulumi/pulumi'
 import * as kube from '@pulumi/kubernetes'
+import * as awsx from '@pulumi/awsx'
 
 export const outputs = main()
 
@@ -11,52 +11,56 @@ async function main() {
 
     if (environment === 'build') {
         const imageName = await buildImage(service_name)
-        return imageName        
+        return imageName
     }
 
     return deploy(service_name, environment)
 }
 
 async function buildImage(name: string): Promise<pulumi.Output<string>> {
-    const i = await infra.docker.buildAndPushImage(
-        `${name}`,
-        infra.git.getInfo().hash.short,
+    const ecr = await new awsx.ecr.Repository(
+        name,
         {
-            context: '.',
-            dockerfile: 'Dockerfile',
-            env: {
-                DOCKER_BUILDKIT: '1'
+            lifeCyclePolicyArgs: {
+                rules: [
+                    {
+                        maximumNumberOfImages: 180,
+                        selection: 'any'
+                    }
+                ]
             }
         }
     )
-    return i.imageName
+
+    return ecr.buildAndPushImage('.')
 }
 
 async function deploy(name: string, env: string) {
-    const cluster = infra.kube.getClusterData('megacluster', env as 'stage' | 'prod')
-    const namespace = 'shapeshift'
-    const repo = `978526999579.dkr.ecr.eu-west-1.amazonaws.com/${name}`
-    const tag = infra.git.getInfo().hash.short
-    const ecrEndpoint = `${repo}:${tag}`
 
-    let secretEnvs: kube.types.input.core.v1.EnvVar[] = []
+    const provider = new kube.Provider('megacluster-prod', { context: 'megacluster-prod' })
+    const namespace = 'axiom'
+    const repo = `978526999579.dkr.ecr.eu-west-1.amazonaws.com/grimoirelab`
+    const ecrEndpoint = `${repo}:ac09f27`
 
-    const secretEnv = (key: string): kube.types.input.core.v1.EnvVar => {
-        return {
-            name: key,
-            valueFrom: {
-                secretKeyRef: {
-                    name: `shapeshift-${env}`,
-                    key: key
-                }
+    const config = new pulumi.Config()
+    const githubToken = config.requireSecret('github-token')
+
+    const grimoirelabSecrets = await new kube.core.v1.Secret(
+        'grimoirelab-secrets',
+        {
+            metadata: {
+                name: 'grimoirelab-secrets',
+                namespace: namespace
+            },
+            stringData: {
+                GRIMOIRELAB_GITHUB_TOKEN: githubToken
             }
+        },
+        {
+            provider: provider,
+            parent: provider
         }
-    }
-
-    secretEnvs = [
-        'GRIMOIRELAB_GITHUB_TOKEN'
-    ].map(secretEnv)
-
+    )
 
     const deployment = new kube.apps.v1.Deployment(
         'grimoirelab',
@@ -127,7 +131,15 @@ async function deploy(name: string, env: string) {
                                     { containerPort: 5601 }
                                 ],
                                 env: [
-                                    ...secretEnvs
+                                    {
+                                        name: 'GRIMOIRELAB_GITHUB_TOKEN',
+                                        valueFrom: {
+                                            secretKeyRef: {
+                                                name: grimoirelabSecrets.metadata.name,
+                                                key: 'GRIMOIRELAB_GITHUB_TOKEN'
+                                            }
+                                        }
+                                    },
                                 ],
                                 resources: {
                                     limits: {
@@ -145,7 +157,7 @@ async function deploy(name: string, env: string) {
                 }
             }
         },
-        { provider: cluster.provider }
+        { provider: provider }
     )
 
     const service = new kube.core.v1.Service(
@@ -168,11 +180,11 @@ async function deploy(name: string, env: string) {
                 type: 'ClusterIP'
             }
         },
-        { provider: cluster.provider }
+        { provider: provider }
     )
 
     const choeListenerRule: kube.types.input.networking.v1beta1.IngressRule = {
-        host: pulumi.interpolate`${name}.${cluster.domain}`,
+        host: pulumi.interpolate`${name}.megacluster.${env}.chiefhappinessofficerellie.org`,
         http: {
             paths: [
                 {
@@ -225,7 +237,7 @@ async function deploy(name: string, env: string) {
                 rules: rules
             }
         },
-        { provider: cluster.provider }
+        { provider: provider }
     )
 
     return ingress.spec.rules[0].host

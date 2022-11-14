@@ -1,2 +1,4 @@
 config:
   aws:region: eu-west-1
+  grimoirelab:github-token:
+    secure: AAABACKiRPwig/ko4dH9RB4DJvMLW9MNOHN9jedWeDUuw98m17JLvFonSxiA/wqYblb+2tzXIjLrfQ4NvzS8AxETDVhqhou9
